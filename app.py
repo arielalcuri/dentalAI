@@ -63,13 +63,7 @@ with st.sidebar:
         "Este modelo ha sido entrenado para detectar "
         "y segmentar patologías dentales en radiografías panorámicas."
     )
-    st.write("---")
-    conf_threshold = st.slider(
-        "Sensibilidad de la IA", 
-        min_value=0.05, max_value=0.95, value=0.25, step=0.05, 
-        help="Aumenta este valor si ves predicciones duplicadas o ruido. Bájalo si la IA no detecta algo evidente."
-    )
-    st.write("---")
+
     st.write("**Instrucciones:**")
     st.write("1. Sube una radiografía panorámica en el área central.")
     st.write("2. La IA la procesará automáticamente.")
@@ -79,6 +73,13 @@ with st.sidebar:
 st.title("Diagnóstico de Radiografías Panorámicas")
 st.write("Sube una imagen y nuestra Inteligencia Artificial detectará y remarcará posibles caries y lesiones.")
 
+st.write("---")
+conf_threshold = st.slider(
+    "⚙️ Ajustar Sensibilidad de la IA", 
+    min_value=0.05, max_value=0.95, value=0.25, step=0.05, 
+    help="Aumenta este valor si ves ruido o duplicados. Bájalo si la IA no detecta algo evidente."
+)
+st.write("---")
 # Cargar el modelo (se cachea para que no recargue desde el disco en cada interacción)
 @st.cache_resource
 def load_model():
