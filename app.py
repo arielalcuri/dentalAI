@@ -113,12 +113,12 @@ if image is not None:
     # Animación de carga mientras la IA piensa
     with tab_diag:
         with st.spinner("La Inteligencia Artificial está analizando la imagen..."):
-        # Realizar predicción con una confianza baja para no perderse nada (0.15)
-        results = model.predict(source=image, conf=0.15)
-        
-        # El resultado viene en una lista. Tomamos el primero.
-        result = results[0]
-        
+            # Realizar predicción con una confianza baja para no perderse nada (0.15)
+            results = model.predict(source=image, conf=0.15)
+            
+            # El resultado viene en una lista. Tomamos el primero.
+            result = results[0]
+            
         # Crear gráfico interactivo con Plotly
         fig = go.Figure()
         
