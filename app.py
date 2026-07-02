@@ -149,6 +149,7 @@ if image is not None:
         fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False, fixedrange=True)
         fig.update_layout(
             height=image.height,
+            showlegend=False,
             margin=dict(l=0, r=0, b=0, t=0),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
