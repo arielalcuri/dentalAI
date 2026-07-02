@@ -5,6 +5,7 @@ import os
 import numpy as np
 import requests
 from io import BytesIO
+import plotly.graph_objects as go
 
 # Configuración de la página para que se vea más ancha y profesional
 st.set_page_config(
@@ -77,16 +78,91 @@ if image is not None:
         # El resultado viene en una lista. Tomamos el primero.
         result = results[0]
         
-        # Generar imagen con los dibujos de colores (Plotting)
-        # result.plot() devuelve un array numpy en formato BGR (OpenCV)
-        im_array = result.plot()
-        # Invertimos los canales de BGR a RGB para que se vea bien en la web
-        im_rgb = im_array[..., ::-1]
-        result_image = Image.fromarray(im_rgb)
+        # Crear gráfico interactivo con Plotly
+        fig = go.Figure()
+        
+        # Añadir la imagen original de fondo
+        fig.add_layout_image(
+            dict(
+                source=image,
+                xref="x",
+                yref="y",
+                x=0,
+                y=0,
+                sizex=image.width,
+                sizey=image.height,
+                sizing="stretch",
+                opacity=1,
+                layer="below"
+            )
+        )
+        fig.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False)
+        fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False)
+        fig.update_layout(
+            margin=dict(l=0, r=0, b=0, t=0),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            hovermode="closest"
+        )
+        
+        boxes = result.boxes
+        masks = result.masks
+        
+        if masks is not None:
+            for idx, mask in enumerate(masks.xy):
+                class_id = int(boxes.cls[idx].item())
+                conf = float(boxes.conf[idx].item())
+                class_name = model.names[class_id]
+                
+                if len(mask) == 0:
+                    continue
+                    
+                x_coords = mask[:, 0].tolist()
+                y_coords = mask[:, 1].tolist()
+                
+                # Cerrar el polígono
+                x_coords.append(x_coords[0])
+                y_coords.append(y_coords[0])
+                
+                hover_text = f"<b>{class_name}</b><br>Confianza: {conf:.0%}"
+                
+                fig.add_trace(go.Scatter(
+                    x=x_coords, y=y_coords, 
+                    fill="toself",
+                    mode="lines",
+                    line=dict(width=2),
+                    name=class_name,
+                    text=hover_text,
+                    hoverinfo="text",
+                    opacity=0.4
+                ))
+        elif boxes is not None:
+            # Fallback por si el modelo detecta cajas pero no máscaras
+            for idx, box in enumerate(boxes.xyxy):
+                class_id = int(boxes.cls[idx].item())
+                conf = float(boxes.conf[idx].item())
+                class_name = model.names[class_id]
+                
+                x1, y1, x2, y2 = box.tolist()
+                x_coords = [x1, x2, x2, x1, x1]
+                y_coords = [y1, y1, y2, y2, y1]
+                
+                hover_text = f"<b>{class_name}</b><br>Confianza: {conf:.0%}"
+                
+                fig.add_trace(go.Scatter(
+                    x=x_coords, y=y_coords, 
+                    fill="toself",
+                    mode="lines",
+                    line=dict(width=2),
+                    name=class_name,
+                    text=hover_text,
+                    hoverinfo="text",
+                    opacity=0.4
+                ))
         
     with col2:
         st.subheader("Diagnóstico de la IA")
-        st.image(result_image, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         
     st.write("---")
     st.subheader("📋 Resumen de Hallazgos")
