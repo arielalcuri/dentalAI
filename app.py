@@ -14,6 +14,47 @@ st.set_page_config(
     layout="wide"
 )
 
+# Diccionario de traducción clínica (Modelo Hipercompleto)
+iccms_desc = {
+    "RA1": "Caries inicial (Mancha blanca en esmalte)",
+    "RA2": "Caries leve (Esmalte interno sin cavidad)",
+    "RA3": "Caries moderada (Ruptura de esmalte localizada)",
+    "RB4": "Caries profunda (Sombra subyacente en dentina)",
+    "RC5": "Caries profunda (Tercio interno de dentina / cavitada)",
+    "RC6": "Caries muy profunda (Pulpa expuesta / gran cavidad)",
+    "Bone Loss": "Pérdida Ósea (Enfermedad Periodontal)",
+    "Caries": "Caries (Genérica)",
+    "Crown": "Corona Protésica",
+    "Cyst": "Quiste Dental",
+    "Filling": "Restauración / Empaste (Resina o Amalgama)",
+    "Fracture teeth": "Fractura Dental",
+    "Implant": "Implante Dental",
+    "Malaligned": "Diente Malalineado",
+    "Mandibular Canal": "Conducto Dentario Inferior (Nervio)",
+    "Missing teeth": "Diente Ausente",
+    "Periapical lesion": "Lesión Periapical (Absceso/Infección)",
+    "Permanent Teeth": "Diente Permanente",
+    "Primary teeth": "Diente Primario (De leche)",
+    "Retained root": "Resto Radicular (Raíz retenida)",
+    "Root Canal Treatment": "Tratamiento de Conducto (Endodoncia)",
+    "Root Piece": "Fragmento Radicular",
+    "Root resorption": "Reabsorción Radicular",
+    "Supra Eruption": "Extrusión Dental (Sobre-erupcionado)",
+    "TAD": "Microtornillo de Ortodoncia (TAD)",
+    "abutment": "Pilar de Implante (Abutment)",
+    "attrition": "Atrición (Desgaste dental)",
+    "bone defect": "Defecto Óseo",
+    "gingival former": "Cicatriceador Gingival (Implante)",
+    "impacted tooth": "Diente Retenido / Impactado",
+    "maxillary sinus": "Seno Maxilar",
+    "metal band": "Banda Metálica (Ortodoncia)",
+    "orthodontic brackets": "Brackets de Ortodoncia",
+    "permanent retainer": "Retenedor Permanente Fijo",
+    "plating": "Placa de Osteosíntesis",
+    "post - core": "Perno Muñón",
+    "wire": "Arco o Alambre de Ortodoncia"
+}
+
 # Panel Lateral de Información
 with st.sidebar:
     st.title("🦷 IA Odontológica")
@@ -99,6 +140,7 @@ if image is not None:
         fig.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False)
         fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False)
         fig.update_layout(
+            height=image.height,
             margin=dict(l=0, r=0, b=0, t=0),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
@@ -124,7 +166,8 @@ if image is not None:
                 x_coords.append(x_coords[0])
                 y_coords.append(y_coords[0])
                 
-                hover_text = f"<b>{class_name}</b><br>Confianza: {conf:.0%}"
+                desc_espanol = iccms_desc.get(class_name, "")
+                hover_text = f"<b>{class_name}</b><br><i>{desc_espanol}</i><br>Confianza: {conf:.0%}"
                 
                 fig.add_trace(go.Scatter(
                     x=x_coords, y=y_coords, 
@@ -147,7 +190,8 @@ if image is not None:
                 x_coords = [x1, x2, x2, x1, x1]
                 y_coords = [y1, y1, y2, y2, y1]
                 
-                hover_text = f"<b>{class_name}</b><br>Confianza: {conf:.0%}"
+                desc_espanol = iccms_desc.get(class_name, "")
+                hover_text = f"<b>{class_name}</b><br><i>{desc_espanol}</i><br>Confianza: {conf:.0%}"
                 
                 fig.add_trace(go.Scatter(
                     x=x_coords, y=y_coords, 
@@ -181,47 +225,6 @@ if image is not None:
             class_name = model.names[class_id]
             class_counts[class_name] = class_counts.get(class_name, 0) + 1
             
-        # Diccionario de traducción clínica (Modelo Hipercompleto)
-        iccms_desc = {
-            "RA1": "Caries inicial (Mancha blanca en esmalte)",
-            "RA2": "Caries leve (Esmalte interno sin cavidad)",
-            "RA3": "Caries moderada (Ruptura de esmalte localizada)",
-            "RB4": "Caries profunda (Sombra subyacente en dentina)",
-            "RC5": "Caries profunda (Tercio interno de dentina / cavitada)",
-            "RC6": "Caries muy profunda (Pulpa expuesta / gran cavidad)",
-            "Bone Loss": "Pérdida Ósea (Enfermedad Periodontal)",
-            "Caries": "Caries (Genérica)",
-            "Crown": "Corona Protésica",
-            "Cyst": "Quiste Dental",
-            "Filling": "Restauración / Empaste (Resina o Amalgama)",
-            "Fracture teeth": "Fractura Dental",
-            "Implant": "Implante Dental",
-            "Malaligned": "Diente Malalineado",
-            "Mandibular Canal": "Conducto Dentario Inferior (Nervio)",
-            "Missing teeth": "Diente Ausente",
-            "Periapical lesion": "Lesión Periapical (Absceso/Infección)",
-            "Permanent Teeth": "Diente Permanente",
-            "Primary teeth": "Diente Primario (De leche)",
-            "Retained root": "Resto Radicular (Raíz retenida)",
-            "Root Canal Treatment": "Tratamiento de Conducto (Endodoncia)",
-            "Root Piece": "Fragmento Radicular",
-            "Root resorption": "Reabsorción Radicular",
-            "Supra Eruption": "Extrusión Dental (Sobre-erupcionado)",
-            "TAD": "Microtornillo de Ortodoncia (TAD)",
-            "abutment": "Pilar de Implante (Abutment)",
-            "attrition": "Atrición (Desgaste dental)",
-            "bone defect": "Defecto Óseo",
-            "gingival former": "Cicatriceador Gingival (Implante)",
-            "impacted tooth": "Diente Retenido / Impactado",
-            "maxillary sinus": "Seno Maxilar",
-            "metal band": "Banda Metálica (Ortodoncia)",
-            "orthodontic brackets": "Brackets de Ortodoncia",
-            "permanent retainer": "Retenedor Permanente Fijo",
-            "plating": "Placa de Osteosíntesis",
-            "post - core": "Perno Muñón",
-            "wire": "Arco o Alambre de Ortodoncia"
-        }
-        
         for name, count in class_counts.items():
             descripcion = iccms_desc.get(name, "")
             st.write(f"- **{count}** lesión(es) clasificada(s) como: `{name}` ➔ **{descripcion}**")
