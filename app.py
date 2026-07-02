@@ -64,6 +64,12 @@ with st.sidebar:
         "y segmentar patologías dentales en radiografías panorámicas."
     )
     st.write("---")
+    conf_threshold = st.slider(
+        "Sensibilidad de la IA", 
+        min_value=0.05, max_value=0.95, value=0.25, step=0.05, 
+        help="Aumenta este valor si ves predicciones duplicadas o ruido. Bájalo si la IA no detecta algo evidente."
+    )
+    st.write("---")
     st.write("**Instrucciones:**")
     st.write("1. Sube una radiografía panorámica en el área central.")
     st.write("2. La IA la procesará automáticamente.")
@@ -113,8 +119,8 @@ if image is not None:
     # Animación de carga mientras la IA piensa
     with tab_diag:
         with st.spinner("La Inteligencia Artificial está analizando la imagen..."):
-            # Realizar predicción con una confianza baja para no perderse nada (0.15)
-            results = model.predict(source=image, conf=0.15)
+            # Realizar predicción con la sensibilidad elegida por el usuario
+            results = model.predict(source=image, conf=conf_threshold)
             
             # El resultado viene en una lista. Tomamos el primero.
             result = results[0]
@@ -151,6 +157,7 @@ if image is not None:
         masks = result.masks
         
         if masks is not None:
+            added_legends = set()
             for idx, mask in enumerate(masks.xy):
                 class_id = int(boxes.cls[idx].item())
                 conf = float(boxes.conf[idx].item())
@@ -169,6 +176,9 @@ if image is not None:
                 desc_espanol = iccms_desc.get(class_name, "")
                 hover_text = f"<b>{class_name}</b><br><i>{desc_espanol}</i><br>Confianza: {conf:.0%}"
                 
+                show_legend = class_name not in added_legends
+                added_legends.add(class_name)
+                
                 fig.add_trace(go.Scatter(
                     x=x_coords, y=y_coords, 
                     fill="toself",
@@ -177,9 +187,12 @@ if image is not None:
                     name=class_name,
                     text=hover_text,
                     hoverinfo="text",
-                    opacity=0.4
+                    opacity=0.4,
+                    showlegend=show_legend,
+                    legendgroup=class_name
                 ))
         elif boxes is not None:
+            added_legends = set()
             # Fallback por si el modelo detecta cajas pero no máscaras
             for idx, box in enumerate(boxes.xyxy):
                 class_id = int(boxes.cls[idx].item())
@@ -193,6 +206,9 @@ if image is not None:
                 desc_espanol = iccms_desc.get(class_name, "")
                 hover_text = f"<b>{class_name}</b><br><i>{desc_espanol}</i><br>Confianza: {conf:.0%}"
                 
+                show_legend = class_name not in added_legends
+                added_legends.add(class_name)
+                
                 fig.add_trace(go.Scatter(
                     x=x_coords, y=y_coords, 
                     fill="toself",
@@ -201,7 +217,9 @@ if image is not None:
                     name=class_name,
                     text=hover_text,
                     hoverinfo="text",
-                    opacity=0.4
+                    opacity=0.4,
+                    showlegend=show_legend,
+                    legendgroup=class_name
                 ))
         
         # Mostrar el gráfico interactivo
