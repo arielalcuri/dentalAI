@@ -104,15 +104,15 @@ else:
             st.error("No se pudo cargar la imagen desde ese enlace. Asegúrate de que sea un enlace directo que termine en .jpg o .png.")
 
 if image is not None:
-    # Mostrar la imagen original
+    # Usar pestañas para que la imagen ocupe el 100% del ancho de la pantalla
+    tab_diag, tab_orig = st.tabs(["🖼️ Diagnóstico de la IA", "📸 Imagen Original"])
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Imagen Original")
+    with tab_orig:
         st.image(image, use_container_width=True)
     
     # Animación de carga mientras la IA piensa
-    with st.spinner("La Inteligencia Artificial está analizando la imagen..."):
+    with tab_diag:
+        with st.spinner("La Inteligencia Artificial está analizando la imagen..."):
         # Realizar predicción con una confianza baja para no perderse nada (0.15)
         results = model.predict(source=image, conf=0.15)
         
@@ -137,8 +137,8 @@ if image is not None:
                 layer="below"
             )
         )
-        fig.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False)
-        fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False)
+        fig.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False, fixedrange=True)
+        fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False, fixedrange=True)
         fig.update_layout(
             height=image.height,
             margin=dict(l=0, r=0, b=0, t=0),
@@ -204,9 +204,8 @@ if image is not None:
                     opacity=0.4
                 ))
         
-    with col2:
-        st.subheader("Diagnóstico de la IA")
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        # Mostrar el gráfico interactivo
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'scrollZoom': False})
         
     st.write("---")
     st.subheader("📋 Resumen de Hallazgos")
