@@ -110,14 +110,16 @@ else:
             st.error("No se pudo cargar la imagen desde ese enlace. Asegúrate de que sea un enlace directo que termine en .jpg o .png.")
 
 if image is not None:
-    # Usar pestañas para que la imagen ocupe el 100% del ancho de la pantalla
-    tab_diag, tab_orig = st.tabs(["🖼️ Diagnóstico de la IA", "📸 Imagen Original"])
+    # Usar columnas para ponerlas lado a lado (Streamlit las apila en celulares automáticamente)
+    col1, col2 = st.columns(2)
     
-    with tab_orig:
+    with col1:
+        st.subheader("📸 Imagen Original")
         st.image(image, use_container_width=True)
     
     # Animación de carga mientras la IA piensa
-    with tab_diag:
+    with col2:
+        st.subheader("🖼️ Diagnóstico de la IA")
         with st.spinner("La Inteligencia Artificial está analizando la imagen..."):
             # Realizar predicción con la sensibilidad elegida por el usuario
             results = model.predict(source=image, conf=conf_threshold)
