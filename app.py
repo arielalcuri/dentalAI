@@ -73,12 +73,13 @@ with st.sidebar:
 st.title("Diagnóstico de Radiografías Panorámicas")
 st.write("Sube una imagen y nuestra Inteligencia Artificial detectará y remarcará posibles caries y lesiones.")
 
-st.write("---")
-conf_threshold = st.slider(
-    "⚙️ Ajustar Sensibilidad de la IA", 
-    min_value=0.05, max_value=0.95, value=0.25, step=0.05, 
-    help="Aumenta este valor si ves ruido o duplicados. Bájalo si la IA no detecta algo evidente."
-)
+with st.expander("⚙️ Opciones Avanzadas"):
+    conf_threshold = st.slider(
+        "Nivel de Confianza de la IA", 
+        min_value=0.05, max_value=0.95, value=0.25, step=0.05, 
+        help="Aumenta este valor si ves ruido o duplicados. Bájalo si la IA no detecta algo evidente."
+    )
+    st.info("💡 Recomendación: Mantener en 0.25 para diagnósticos estándar. Bajar la sensibilidad puede revelar patologías sutiles, pero aumentará los falsos positivos.")
 st.write("---")
 # Cargar el modelo (se cachea para que no recargue desde el disco en cada interacción)
 @st.cache_resource
