@@ -231,24 +231,34 @@ if image is not None:
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'scrollZoom': False})
         
     st.write("---")
-    st.subheader("📋 Resumen de Hallazgos")
+    st.subheader("📋 Resumen Clínico de Hallazgos")
     
-    # Extraer las detecciones para mostrarlas en texto
+    # Extraer las detecciones
     boxes = result.boxes
     if len(boxes) == 0:
-        st.success("¡Buenas noticias! No se detectaron anomalías con el nivel de confianza actual.")
+        st.success("✅ **¡Buenas noticias!** No se detectaron anomalías visibles con el nivel de sensibilidad actual.")
     else:
-        st.warning(f"Se detectaron {len(boxes)} posible(s) problema(s).")
+        st.warning(f"⚠️ La Inteligencia Artificial detectó **{len(boxes)}** posible(s) hallazgo(s) anatómico(s) o patológico(s).")
         
-        # Contar cuántas veces aparece cada clase detectada
+        # Preparar los datos para una tabla bonita
         class_counts = {}
         for box in boxes:
             class_id = int(box.cls[0].item())
             class_name = model.names[class_id]
             class_counts[class_name] = class_counts.get(class_name, 0) + 1
             
+        import pandas as pd
+        datos_tabla = []
         for name, count in class_counts.items():
             descripcion = iccms_desc.get(name, "")
-            st.write(f"- **{count}** lesión(es) clasificada(s) como: `{name}` ➔ **{descripcion}**")
+            datos_tabla.append({
+                "Cantidad": count,
+                "Identificador AI (Inglés)": name,
+                "Diagnóstico y Descripción (Español)": descripcion
+            })
+            
+        # Mostrar tabla interactiva
+        df_resultados = pd.DataFrame(datos_tabla)
+        st.dataframe(df_resultados, use_container_width=True, hide_index=True)
 
 st.markdown("<br><hr><center><i>Desarrollado estrictamente como herramienta de diagnóstico presuntivo asistido. El diagnóstico final debe ser emitido por un profesional odontólogo.</i></center>", unsafe_allow_html=True)
