@@ -139,12 +139,39 @@ if image is not None:
     # Animación de carga mientras la IA piensa
     with col2:
         st.subheader("🖼️ Diagnóstico de la IA")
-        with st.spinner("La Inteligencia Artificial está analizando la imagen..."):
+        with st.spinner("La Inteligencia Artificial está analizando la imagen y detectando piezas dentales..."):
             # Realizar predicción con la sensibilidad elegida por el usuario
             results = model.predict(source=image, conf=conf_threshold)
             
             # El resultado viene en una lista. Tomamos el primero.
             result = results[0]
+            
+            # Llamar a Roboflow para detectar piezas dentales
+            roboflow_preds = []
+            try:
+                import base64
+                from io import BytesIO
+                buffered = BytesIO()
+                # Convertimos a RGB en caso de que sea RGBA
+                if image.mode != 'RGB':
+                    rgb_image = image.convert('RGB')
+                else:
+                    rgb_image = image
+                rgb_image.save(buffered, format="JPEG")
+                img_str = base64.b64encode(buffered.getvalue()).decode()
+                
+                api_key = st.secrets.get("ROBOFLOW_API_KEY", "8CPDdW5h7dJTljlpbiNC")
+                url = "https://detect.roboflow.com/teeth-detection-and-numbering-agi2i/18"
+                resp = requests.post(
+                    url, 
+                    params={"api_key": api_key}, 
+                    data=img_str, 
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+                if resp.status_code == 200:
+                    roboflow_preds = resp.json().get("predictions", [])
+            except Exception as e:
+                print("Error Roboflow:", e)
             
         # Crear gráfico interactivo con Plotly
         fig = go.Figure()
@@ -257,19 +284,45 @@ if image is not None:
     else:
         st.warning(f"⚠️ La Inteligencia Artificial detectó **{len(boxes)}** posible(s) hallazgo(s) anatómico(s) o patológico(s).")
         
-        # Preparar los datos para una tabla bonita
-        class_counts = {}
+        # Preparar los datos para una tabla bonita cruzando patologías con piezas dentales
+        hallazgos = []
         for box in boxes:
             class_id = int(box.cls[0].item())
             class_name = model.names[class_id]
-            class_counts[class_name] = class_counts.get(class_name, 0) + 1
+            
+            # Coordenadas de la patología local
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+            
+            # Buscar el diente de roboflow que contenga este centroide
+            pieza = "General"
+            for p in roboflow_preds:
+                px = p["x"]
+                py = p["y"]
+                pw = p["width"]
+                ph = p["height"]
+                # Bounding box del diente detectado por roboflow
+                rx1 = px - pw/2
+                rx2 = px + pw/2
+                ry1 = py - ph/2
+                ry2 = py + ph/2
+                if rx1 <= cx <= rx2 and ry1 <= cy <= ry2:
+                    pieza = p["class"]
+                    break
+            
+            hallazgos.append({"pieza": pieza, "class_name": class_name})
+
+        # Agrupar por nombre y pieza
+        from collections import Counter
+        conteo = Counter((h["class_name"], h["pieza"]) for h in hallazgos)
             
         import pandas as pd
         datos_tabla = []
-        for name, count in class_counts.items():
+        for (name, pieza), count in conteo.items():
             descripcion = iccms_desc.get(name, "")
             datos_tabla.append({
                 "Cantidad": count,
+                "Pieza Dental": pieza,
                 "Identificador AI (Inglés)": name,
                 "Diagnóstico y Descripción (Español)": descripcion
             })
