@@ -117,7 +117,24 @@ if image is not None:
     
     with col1:
         st.subheader("📸 Imagen Original")
-        st.image(image, use_container_width=True)
+        # Reemplazamos st.image por Plotly para que ambas columnas tengan idéntica altura y capacidades de zoom
+        fig_left = go.Figure()
+        fig_left.add_layout_image(
+            dict(
+                source=image, xref="x", yref="y", x=0, y=0,
+                sizex=image.width, sizey=image.height, sizing="stretch", opacity=1, layer="below"
+            )
+        )
+        fig_left.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False)
+        fig_left.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False)
+        fig_left.update_layout(
+            height=450,
+            margin=dict(l=0, r=0, b=0, t=0),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            hovermode=False
+        )
+        st.plotly_chart(fig_left, use_container_width=True, config={'displayModeBar': True, 'scrollZoom': True})
     
     # Animación de carga mientras la IA piensa
     with col2:
@@ -147,10 +164,10 @@ if image is not None:
                 layer="below"
             )
         )
-        fig.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False, fixedrange=True)
-        fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False, fixedrange=True)
+        fig.update_xaxes(showgrid=False, range=(0, image.width), showticklabels=False)
+        fig.update_yaxes(showgrid=False, scaleanchor="x", range=(image.height, 0), showticklabels=False)
         fig.update_layout(
-            height=image.height,
+            height=450,
             showlegend=False,
             margin=dict(l=0, r=0, b=0, t=0),
             plot_bgcolor="rgba(0,0,0,0)",
@@ -228,7 +245,7 @@ if image is not None:
                 ))
         
         # Mostrar el gráfico interactivo
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'scrollZoom': False})
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True, 'scrollZoom': True})
         
     st.write("---")
     st.subheader("📋 Resumen Clínico de Hallazgos")
