@@ -5,4 +5,3 @@ numpy
 requests
 opencv-python-headless
 plotly
-inference-sdk
